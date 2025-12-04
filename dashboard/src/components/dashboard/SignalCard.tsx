@@ -1,6 +1,7 @@
-import { ArrowUpCircle, ArrowDownCircle, TrendingUp, AlertTriangle } from 'lucide-react'
+import { ArrowUpCircle, ArrowDownCircle, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
 import type { Signal } from '../../types/signal'
 import { calculatePnL } from '../../utils/calculator'
+import { formatIndoDate } from '../../utils/dateFormat'
 
 interface Props {
   data: Signal;
@@ -13,35 +14,43 @@ export const SignalCard = ({ data, margin, leverage }: Props) => {
   const sl = calculatePnL(data.entry_price, data.sl_price, data.direction, margin, leverage)
 
   return (
-    <div className="bg-slate-900 border border-slate-800/60 rounded-xl p-5 hover:border-cyan-500/30 transition-all hover:-translate-y-1 shadow-lg group">
-      {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+    <div className="bg-slate-900 border border-slate-800/60 rounded-xl p-5 hover:border-cyan-500/30 transition-all hover:-translate-y-1 shadow-lg group relative overflow-hidden">
+      
+      <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl opacity-10 rounded-full pointer-events-none -mr-10 -mt-10 ${isLong ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+
+      <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 mb-4 pb-2 border-b border-slate-800/50">
+        <Clock size={12} className="text-slate-400" />
+        <span>{formatIndoDate(data.created_at)}</span>
+      </div>
+
+      {/* Main Header */}
+      <div className="flex justify-between items-start mb-4 relative z-10">
         <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-lg ${isLong ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+          <div className={`p-2.5 rounded-lg shadow-inner ${isLong ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20' : 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20'}`}>
             {isLong ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
           </div>
           <div>
-            <h3 className="font-bold text-lg leading-tight tracking-tight">{data.coin_symbol}</h3>
+            <h3 className="font-bold text-lg leading-tight tracking-tight text-slate-100">{data.coin_symbol}</h3>
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded tracking-wide ${isLong ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
               {data.direction}
             </span>
           </div>
         </div>
         <div className="text-right">
-          <p className="text-[10px] text-slate-500 uppercase">Entry</p>
-          <p className="font-mono font-medium text-slate-200">{data.entry_price}</p>
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider">Entry Price</p>
+          <p className="font-mono font-bold text-lg text-slate-200">{data.entry_price}</p>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="space-y-2 bg-slate-950/50 p-3 rounded-lg border border-slate-800/50">
+      {/* Calculator Stats */}
+      <div className="space-y-2 bg-slate-950/50 p-3 rounded-lg border border-slate-800/50 relative z-10">
         {/* SL Logic */}
         <div className="flex justify-between items-center text-xs group/row">
           <div className="flex items-center gap-1.5 text-slate-400">
             <AlertTriangle size={12} className="text-rose-500" />
-            <span>SL <span className="text-[10px] opacity-50">({data.sl_price})</span></span>
+            <span>SL <span className="text-[10px] opacity-50 font-mono">({data.sl_price})</span></span>
           </div>
-          <span className={`font-mono ${sl.usd < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+          <span className={`font-mono font-medium ${sl.usd < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
             ${sl.usd.toFixed(2)} ({sl.pct.toFixed(1)}%)
           </span>
         </div>
@@ -55,9 +64,9 @@ export const SignalCard = ({ data, margin, leverage }: Props) => {
             <div key={idx} className="flex justify-between items-center text-xs">
               <div className="flex items-center gap-1.5 text-slate-400">
                 <TrendingUp size={12} className="text-emerald-500" />
-                <span>TP{idx + 1} <span className="text-[10px] opacity-50">({tp})</span></span>
+                <span>TP{idx + 1} <span className="text-[10px] opacity-50 font-mono">({tp})</span></span>
               </div>
-              <span className="font-mono text-emerald-400">
+              <span className="font-mono font-medium text-emerald-400">
                 +${tpCalc.usd.toFixed(2)}
               </span>
             </div>
@@ -65,11 +74,12 @@ export const SignalCard = ({ data, margin, leverage }: Props) => {
         })}
       </div>
       
+      {/* Footer Action */}
       <a 
         href={`https://www.binance.com/en/futures/${data.coin_symbol}USDT`} 
         target="_blank" 
         rel="noreferrer"
-        className="mt-4 flex items-center justify-center w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-lg transition-colors font-medium"
+        className="mt-4 flex items-center justify-center w-full bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs py-2.5 rounded-lg transition-all font-medium border border-transparent hover:border-slate-600 relative z-10"
       >
         Open Chart
       </a>
