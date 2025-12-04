@@ -15,8 +15,6 @@ export const NotificationButton = () => {
     setPermission(granted ? 'granted' : 'denied')
   }
 
-  // Jika browser HP tidak support notifikasi, tombol tidak usah ditampilkan
-  // (Mencegah error layout & fungsi)
   if (typeof window !== 'undefined' && !('Notification' in window)) {
     return null 
   }
