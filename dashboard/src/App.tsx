@@ -46,9 +46,8 @@ function App() {
         <div className="text-center lg:text-left flex flex-col items-center lg:items-start gap-2">
           <div>
             <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
-              Dashboard
+              Signal Dashboard
             </h1>
-            <p className="text-slate-400 text-sm mt-1">Signal Aggregator</p>
           </div>
 
           <NotificationButton />
