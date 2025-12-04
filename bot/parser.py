@@ -1,73 +1,58 @@
-import re
+import os
+import json
+import google.generativeai as genai
+from dotenv import load_dotenv
 
-def extract_signal_data(raw_text):
-    """
-    Parses raw text from Telegram to extract signal data.
-    Returns a dictionary of clean data or None if it's not a valid signal.
-    """
+# Load API Key
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-    text_clean = raw_text.replace('*', '').replace('`', '').strip()
+# Konfigurasi Model
+generation_config = {
+    "temperature": 0.1,
+    "response_mime_type": "application/json",
+}
 
-    # Initialize data structure
-    data = {
-        'coin': None,
-        'direction': None,
-        'entry': 0.0,
-        'sl': 0.0,
-        'tps': []
+model = genai.GenerativeModel(
+    model_name="gemini-pro",
+    generation_config=generation_config,
+    system_instruction="""
+    You are a crypto trading signal parser. 
+    Your job is to extract trading signal details from user messages.
+    
+    Output Format (JSON):
+    {
+        "is_signal": boolean,     // True only if it contains specific entry, SL, or TP
+        "coin_symbol": string,    // e.g. "BTC", "ETH" (Remove $ or /USDT)
+        "direction": string,      // "LONG" or "SHORT"
+        "entry_price": number,    // The main entry price
+        "sl_price": number,       // Stop Loss price
+        "tp_targets": [number]    // Array of Take Profit prices
     }
 
-    # A. Find Coin Symbol (e.g., $BTC, BTC/USDT, #ETH)
-    coin_match = re.search(r'(?:\$|\#)?([A-Z]{2,6})(?:/USDT|\s|$)', text_clean, re.IGNORECASE)
-    if coin_match:
-        data['coin'] = coin_match.group(1).upper()
-    else:
-        return None
+    Rules:
+    1. If the message is NOT a trading signal (just conversation), set "is_signal": false.
+    2. Convert all prices to numbers/floats.
+    3. Ignore leverage or margin amounts, focus on price levels.
+    4. If multiple TPs are listed, put them in the array.
+    """
+)
 
-    # B. Find Direction (LONG/SHORT/BUY/SELL)
-    if re.search(r'(?i)\b(long|buy)\b', text_clean):
-        data['direction'] = 'LONG'
-    elif re.search(r'(?i)\b(short|sell)\b', text_clean):
-        data['direction'] = 'SHORT'
-    else:
-        return None
-
-    # C. Find Entry Price
-    entry_match = re.search(r'(?i)(?:entry|price|now)[\s:]*?([\d.]+)', text_clean)
-    if entry_match:
-        try:
-            data['entry'] = float(entry_match.group(1))
-        except ValueError:
-            pass
-
-    # D. Find Stop Loss (SL)
-    sl_match = re.search(r'(?i)(?:sl|stop|invalid|cut)[\s:]*?([\d.]+)', text_clean)
-    if sl_match:
-        try:
-            data['sl'] = float(sl_match.group(1))
-        except ValueError:
-            pass
-
-    # E. Find Take Profits (TP) - Can be multiple
-    raw_tps = re.findall(r'(?i)(?:tp|target)[\s\d]*[:=]\s*([\d.]+)', text_clean)
-
-    if not raw_tps:
-        lines = text_clean.split('\n')
-        for line in lines:
-            if 'tp' in line.lower() or 'target' in line.lower():
-                nums = re.findall(r'([\d.]+)', line)
-                for n in nums:
-                    try:
-                        val = float(n)
-                        if val not in [1.0, 2.0, 3.0]:
-                            data['tps'].append(val)
-                    except ValueError:
-                        pass
-    else:
-         data['tps'] = [float(x) for x in raw_tps]
-
-    # Final validation: Coin and a positive Entry Price are mandatory.
-    if data['coin'] and data['entry'] > 0:
-        return data
-
+def extract_signal_data(raw_text):
+    try:
+        response = model.generate_content(raw_text)
+        parsed_data = json.loads(response.text)
+        
+        if parsed_data.get('is_signal') == True and parsed_data.get('entry_price'):
+            return {
+                'coin': parsed_data.get('coin_symbol'),
+                'direction': parsed_data.get('direction'),
+                'entry': parsed_data.get('entry_price'),
+                'sl': parsed_data.get('sl_price'),
+                'tps': parsed_data.get('tp_targets', [])
+            }
+            
+    except Exception as e:
+        print(f"   ⚠️ AI Parsing Error: {e}")
+    
     return None
