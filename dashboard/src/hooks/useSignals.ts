@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Signal } from '../types/signal'
+import { sendSignalNotification } from '../utils/notifications'
 
 export const useSignals = () => {
   const [signals, setSignals] = useState<Signal[]>([])
@@ -27,6 +28,7 @@ export const useSignals = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'signals' }, (payload) => {
         const newSignal = payload.new as Signal
         setSignals((prev) => [newSignal, ...prev])
+        sendSignalNotification(newSignal.coin_symbol, newSignal.direction, newSignal.entry_price)
       })
       .subscribe()
 
