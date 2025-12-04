@@ -75,7 +75,6 @@ async def my_event_handler(event):
         return 
 
     # --- STAGE 2: AI PROCESSING ---
-    
     sender = await event.get_sender()
     chat_name = sender.title if hasattr(sender, 'title') else 'Unknown Chat'
     print(f"\n📩 Potential Signal from {chat_name}:")
@@ -92,7 +91,8 @@ async def my_event_handler(event):
             "entry_price": signal_data['entry'],
             "sl_price": signal_data['sl'],
             "tp_targets": signal_data['tps'],
-            "raw_message": raw_text
+            "raw_message": raw_text,
+            "topic_id": topic_id
         }
 
         try:

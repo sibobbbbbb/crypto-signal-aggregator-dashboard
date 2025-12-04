@@ -1,6 +1,7 @@
 export interface Signal {
   id: number;
   created_at: string;
+  topic_id: number;
   coin_symbol: string;
   direction: 'LONG' | 'SHORT';
   entry_price: number;
