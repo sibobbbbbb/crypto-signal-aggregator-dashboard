@@ -14,7 +14,7 @@ generation_config = {
 }
 
 model = genai.GenerativeModel(
-    model_name="gemini-pro",
+    model_name="gemini-2.0-flash",
     generation_config=generation_config,
     system_instruction="""
     You are a crypto trading signal parser. 
