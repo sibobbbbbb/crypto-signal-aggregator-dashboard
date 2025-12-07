@@ -1,13 +1,15 @@
 import os
 import json
+import time
 import google.generativeai as genai
+from google.api_core import exceptions
 from dotenv import load_dotenv
 
 # Load API Key
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Konfigurasi Model
+# Model Configuration
 generation_config = {
     "temperature": 0.1,
     "response_mime_type": "application/json",
@@ -39,20 +41,35 @@ model = genai.GenerativeModel(
 )
 
 def extract_signal_data(raw_text):
-    try:
-        response = model.generate_content(raw_text)
-        parsed_data = json.loads(response.text)
-        
-        if parsed_data.get('is_signal') == True and parsed_data.get('entry_price'):
-            return {
-                'coin': parsed_data.get('coin_symbol'),
-                'direction': parsed_data.get('direction'),
-                'entry': parsed_data.get('entry_price'),
-                'sl': parsed_data.get('sl_price'),
-                'tps': parsed_data.get('tp_targets', [])
-            }
-            
-    except Exception as e:
-        print(f"   ⚠️ AI Parsing Error: {e}")
+    max_retries = 3
     
+    for attempt in range(max_retries):
+        try:
+            # Request to AI
+            response = model.generate_content(raw_text)
+            parsed_data = json.loads(response.text)
+            
+            # Data Validation
+            if parsed_data.get('is_signal') == True and parsed_data.get('entry_price'):
+                return {
+                    'coin': parsed_data.get('coin_symbol'),
+                    'direction': parsed_data.get('direction'),
+                    'entry': parsed_data.get('entry_price'),
+                    'sl': parsed_data.get('sl_price'),
+                    'tps': parsed_data.get('tp_targets', [])
+                }
+            return None
+
+
+        # Handle Quota Exceeded
+        except exceptions.ResourceExhausted:
+            wait_time = 10 * (attempt + 1)
+            print(f"   ⏳ Gemini quota exhausted. Waiting {wait_time} seconds before retrying... (Attempt {attempt+1}/{max_retries})")
+            time.sleep(wait_time)
+            
+        except Exception as e:
+            print(f"   ⚠️ AI Parsing Error: {e}")
+            return None
+    
+    print("   ❌ Failed after 3 attempts. Skipping this message.")
     return None
