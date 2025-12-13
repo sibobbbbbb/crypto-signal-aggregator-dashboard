@@ -1,75 +1,58 @@
 import os
 import json
-import time
-import google.generativeai as genai
-from google.api_core import exceptions
+import re
+from groq import Groq
 from dotenv import load_dotenv
 
 # Load API Key
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# Model Configuration
-generation_config = {
-    "temperature": 0.1,
-    "response_mime_type": "application/json",
-}
-
-model = genai.GenerativeModel(
-    model_name="gemini-2.0-flash",
-    generation_config=generation_config,
-    system_instruction="""
-    You are a crypto trading signal parser. 
-    Your job is to extract trading signal details from user messages.
-    
-    Output Format (JSON):
-    {
-        "is_signal": boolean,     // True only if it contains specific entry, SL, or TP
-        "coin_symbol": string,    // e.g. "BTC", "ETH" (Remove $ or /USDT)
-        "direction": string,      // "LONG" or "SHORT"
-        "entry_price": number,    // The main entry price
-        "sl_price": number,       // Stop Loss price
-        "tp_targets": [number]    // Array of Take Profit prices
-    }
-
-    Rules:
-    1. If the message is NOT a trading signal (just conversation), set "is_signal": false.
-    2. Convert all prices to numbers/floats.
-    3. Ignore leverage or margin amounts, focus on price levels.
-    4. If multiple TPs are listed, put them in the array.
-    """
+# Inisialisasi Client Groq
+client = Groq(
+    api_key=os.getenv("GROQ_API_KEY"),
 )
 
 def extract_signal_data(raw_text):
-    max_retries = 3
-    
-    for attempt in range(max_retries):
-        try:
-            # Request to AI
-            response = model.generate_content(raw_text)
-            parsed_data = json.loads(response.text)
-            
-            # Data Validation
-            if parsed_data.get('is_signal') == True and parsed_data.get('entry_price'):
-                return {
-                    'coin': parsed_data.get('coin_symbol'),
-                    'direction': parsed_data.get('direction'),
-                    'entry': parsed_data.get('entry_price'),
-                    'sl': parsed_data.get('sl_price'),
-                    'tps': parsed_data.get('tp_targets', [])
-                }
-            return None
+    system_prompt = """
+    You are a crypto signal parser. Extract data into this JSON format:
+    {
+        "is_signal": boolean,
+        "coin_symbol": string, 
+        "direction": "LONG" or "SHORT",
+        "entry_price": number,
+        "sl_price": number,
+        "tp_targets": [number]
+    }
+    Rules:
+    - If not a signal, set "is_signal": false.
+    - Remove $ or /USDT from symbol.
+    - Return ONLY the JSON string. No markdown, no explanation.
+    """
 
-
-        # Handle Quota Exceeded
-        except exceptions.ResourceExhausted:
-            wait_time = 10 * (attempt + 1)
-            print(f"   ⏳ Gemini quota exhausted. Waiting {wait_time} seconds before retrying... (Attempt {attempt+1}/{max_retries})")
-            time.sleep(wait_time)
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": raw_text}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.1,
+            response_format={"type": "json_object"}
+        )
+        result_text = chat_completion.choices[0].message.content
+        parsed_data = json.loads(result_text)
+        
+        if parsed_data.get('is_signal') == True and parsed_data.get('entry_price'):
+            return {
+                'coin': parsed_data.get('coin_symbol'),
+                'direction': parsed_data.get('direction'),
+                'entry': parsed_data.get('entry_price'),
+                'sl': parsed_data.get('sl_price'),
+                'tps': parsed_data.get('tp_targets', [])
+            }
             
-        except Exception as e:
-            print(f"   ⚠️ AI Parsing Error: {e}")
-            return None
-    
-    print("   ❌ Failed after 3 attempts. Skipping this message.")
-    return None
+        return None
+
+    except Exception as e:
+        print(f"   ⚠️ Groq Error: {e}")
+        return None
