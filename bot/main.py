@@ -1,4 +1,5 @@
 import os
+import time
 import asyncio
 from dotenv import load_dotenv
 from telethon import TelegramClient, events
@@ -31,7 +32,7 @@ ALLOWED_TOPIC_IDS = []
 if raw_topic_ids:
     ALLOWED_TOPIC_IDS = [int(tid.strip()) for tid in raw_topic_ids.split(',') if tid.strip().isdigit()]
 
-print(f"⚙️ Config Loaded:")
+print(f"⚙️ Configuration Loaded:")
 print(f"   - Channels: {CHANNELS}")
 print(f"   - Whitelist Topics: {ALLOWED_TOPIC_IDS if ALLOWED_TOPIC_IDS else 'ALL TOPICS (No Filter)'}")
 
@@ -42,7 +43,11 @@ MUST_HAVE_KEYWORDS = [
     "profit", "setup", "limit", "market"
 ]
 
-# Init Clients
+# --- DEDUPLICATION CACHE ---
+RECENT_SIGNALS = {}
+DEDUPE_WINDOW = 600
+
+# Initialize Clients
 print("🔄 Connecting to Supabase...")
 supabase: Client = create_client(SUPA_URL, SUPA_KEY)
 
@@ -68,21 +73,31 @@ async def my_event_handler(event):
 
     text_lower = raw_text.lower()
 
-    # --- STAGE 1: PRE-SCREENING (Prevent Spam from entering AI) ---
+    # --- PRE-SCREENING ---
     has_keyword = any(word in text_lower for word in MUST_HAVE_KEYWORDS)
-    
     if not has_keyword:
         return 
 
-    # --- STAGE 2: AI PROCESSING ---
+    # --- AI PROCESSING ---
     sender = await event.get_sender()
     chat_name = sender.title if hasattr(sender, 'title') else 'Unknown Chat'
-    print(f"\n📩 Potential Signal from {chat_name}:")
-    print(f"   Context: {raw_text[:50].replace(chr(10), ' ')}...")
-
     signal_data = extract_signal_data(raw_text)
 
     if signal_data:
+        # --- DEDUPLICATION CHECK (ANTI-DOUBLE) ---
+        unique_signal_key = f"{signal_data['coin']}_{signal_data['direction']}_{signal_data['entry']}_{topic_id}"
+        current_time = time.time()
+
+        if unique_signal_key in RECENT_SIGNALS:
+            last_seen = RECENT_SIGNALS[unique_signal_key]
+            if current_time - last_seen < DEDUPE_WINDOW:
+                print(f"   🚫 DUPLICATE DETECTED: {unique_signal_key}")
+                print("      (Identical signal recently received, skipping to keep database clean)")
+                return
+
+        RECENT_SIGNALS[unique_signal_key] = current_time
+        
+        print(f"\n📩 New Signal Found from {chat_name}:")
         print(f"   ✅ AI Confirm: {signal_data['coin']} ({signal_data['direction']})")
         
         payload = {
@@ -101,10 +116,9 @@ async def my_event_handler(event):
         except Exception as e:
             print(f"   ❌ DB Error: {e}")
     else:
-        print("   ⚠️ AI Reject: Not a complete signal format.")
+        pass
 
 if __name__ == '__main__':
-    print(f"🚀 Bot Running with Smart Filter!")
-    print("   Waiting for signals (Regular chats will be ignored)...")
+    print(f"🚀 Bot Running with Anti-Duplicate System!")
     client.start()
     client.run_until_disconnected()
