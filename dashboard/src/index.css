@@ -1,1 +1,175 @@
 @import "tailwindcss";
+
+/* Import Inter Font for Professional Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ============================================
+   DESIGN SYSTEM - CUSTOM PROPERTIES
+   ============================================ */
+@layer base {
+  :root {
+    /* Color System - Natural & Professional */
+    --color-bg-primary: 15 15 17;        /* Near black background */
+    --color-bg-secondary: 22 22 26;      /* Card background */
+    --color-bg-tertiary: 28 28 32;       /* Elevated surfaces */
+    
+    --color-border-primary: 38 38 42;    /* Subtle borders */
+    --color-border-secondary: 48 48 52;  /* Hover borders */
+    
+    --color-text-primary: 250 250 252;   /* High contrast text */
+    --color-text-secondary: 161 161 170; /* Muted text */
+    --color-text-tertiary: 113 113 122;  /* Disabled/hint text */
+    
+    /* Accent Colors - Warm & Cool Tones */
+    --color-long: 251 146 60;            /* Warm orange for LONG */
+    --color-long-muted: 234 88 12;       /* Deeper orange */
+    --color-short: 139 92 246;           /* Cool violet for SHORT */
+    --color-short-muted: 109 40 217;     /* Deeper violet */
+    
+    --color-success: 34 197 94;          /* Green for gains */
+    --color-danger: 239 68 68;           /* Red for losses */
+    --color-warning: 245 158 11;         /* Amber for warnings */
+    
+    --color-accent: 99 102 241;          /* Indigo accent */
+    
+    /* Spacing System */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    
+    /* Shadows - Layered Depth */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.3), 0 8px 10px -6px rgb(0 0 0 / 0.2);
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-50 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    background-color: rgb(var(--color-bg-primary));
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(251, 146, 60, 0.03) 0px, transparent 50%);
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Better focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-indigo-500/50 ring-offset-2 ring-offset-zinc-950;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES - ANIMATIONS
+   ============================================ */
+@layer utilities {
+  .animate-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  .transition-smooth {
+    transition: all var(--transition-base);
+  }
+  
+  .transition-spring {
+    transition: all var(--transition-spring);
+  }
+  
+  /* Gradient text utilities */
+  .text-gradient-warm {
+    @apply bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-cool {
+    @apply bg-gradient-to-r from-violet-400 to-purple-500 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-success {
+    @apply bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent;
+  }
+}
+
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Loading shimmer effect */
+.shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgb(var(--color-bg-secondary)) 4%,
+    rgb(var(--color-bg-tertiary)) 25%,
+    rgb(var(--color-bg-secondary)) 36%
+  );
+  background-size: 1000px 100%;
+}

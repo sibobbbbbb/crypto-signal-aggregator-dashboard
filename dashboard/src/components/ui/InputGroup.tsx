@@ -5,13 +5,13 @@ interface InputGroupProps {
 }
 
 export const InputGroup = ({ label, value, onChange }: InputGroupProps) => (
-  <div className="flex flex-col">
-    <label className="text-[10px] text-slate-500 font-mono mb-1">{label}</label>
+  <div className="flex flex-col gap-1.5">
+    <label className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest">{label}</label>
     <input 
       type="number" 
       value={value} 
       onChange={(e) => onChange(Number(e.target.value))}
-      className="bg-slate-950 border border-slate-700 rounded px-2 py-1 w-20 text-center focus:outline-none focus:border-cyan-500 transition-colors font-mono font-bold"
+      className="bg-zinc-950/80 border-2 border-zinc-800 hover:border-zinc-700 focus:border-indigo-500 rounded-lg px-3 py-2 w-24 text-center focus:outline-none transition-all duration-200 font-mono font-bold text-zinc-100 text-base"
     />
   </div>
 )

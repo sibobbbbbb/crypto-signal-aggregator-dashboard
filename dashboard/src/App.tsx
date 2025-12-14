@@ -40,17 +40,19 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 max-w-6xl mx-auto font-sans">
+    <div className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto">
       {/* HEADER */}
-      <header className="flex flex-col lg:flex-row justify-between items-center mb-8 gap-6">
-        <div className="text-center lg:text-left flex flex-col items-center lg:items-start gap-2">
-          <div>
-            <h1 className="text-3xl font-bold bg-linear-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-8">
+        <div className="flex flex-col gap-4 flex-1">
+          <div className="flex items-center gap-4">
+            <h1 className="text-4xl font-bold tracking-tight text-gradient-success">
               Signal Dashboard
             </h1>
+            <NotificationButton />
           </div>
-
-          <NotificationButton />
+          <p className="text-zinc-400 text-sm max-w-xl leading-relaxed">
+            Monitor real-time crypto trading signals with advanced position calculations
+          </p>
         </div>
 
         <GlobalCalculator
@@ -69,10 +71,11 @@ function App() {
       />
 
       {/* SIGNAL GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 min-h-[400px] content-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 min-h-[500px] content-start">
         {loading ? (
-          <div className="col-span-full text-center py-20 text-slate-500 animate-pulse">
-            Loading signals...
+          <div className="col-span-full flex flex-col items-center justify-center py-32 gap-4">
+            <div className="w-12 h-12 border-4 border-zinc-800 border-t-indigo-500 rounded-full animate-spin"></div>
+            <p className="text-zinc-500 text-sm font-medium animate-pulse">Loading signals...</p>
           </div>
         ) : paginatedSignals.length > 0 ? (
           paginatedSignals.map((signal) => (
@@ -84,8 +87,10 @@ function App() {
             />
           ))
         ) : (
-          <div className="col-span-full text-center py-20 text-slate-600 border border-dashed border-slate-800 rounded-xl">
-            <p>Tidak ada sinyal di kategori ini.</p>
+          <div className="col-span-full flex flex-col items-center justify-center py-32 gap-3 border-2 border-dashed border-zinc-800 rounded-2xl">
+            <div className="text-4xl opacity-20">📊</div>
+            <p className="text-zinc-500 font-medium">Tidak ada sinyal di kategori ini</p>
+            <p className="text-zinc-600 text-sm">Coba pilih kategori lain atau tunggu sinyal baru</p>
           </div>
         )}
       </div>

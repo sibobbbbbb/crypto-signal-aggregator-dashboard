@@ -10,25 +10,40 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }: Props) => 
   if (totalPages <= 1) return null
 
   return (
-    <div className="flex justify-center items-center gap-4 mt-8 pt-6 border-t border-slate-800/50">
+    <div className="flex justify-center items-center gap-6 mt-12 pt-8 border-t border-zinc-800/50">
       <button
         disabled={currentPage === 1}
         onClick={() => onPageChange(currentPage - 1)}
-        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="group p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-zinc-800 disabled:hover:bg-zinc-900/50 transition-all duration-200 shadow-lg disabled:shadow-none"
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={20} strokeWidth={2.5} className="text-zinc-400 group-hover:text-zinc-200 transition-colors" />
       </button>
       
-      <span className="text-slate-400 text-sm font-mono">
-        Page <span className="text-white font-bold">{currentPage}</span> of {totalPages}
-      </span>
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-2">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+            <button
+              key={page}
+              onClick={() => onPageChange(page)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                page === currentPage 
+                  ? 'bg-indigo-500 w-8' 
+                  : 'bg-zinc-700 hover:bg-zinc-600'
+              }`}
+            />
+          ))}
+        </div>
+        <span className="text-zinc-500 text-sm font-medium">
+          Page <span className="text-zinc-200 font-bold">{currentPage}</span> of {totalPages}
+        </span>
+      </div>
 
       <button
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}
-        className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="group p-3 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-zinc-800 disabled:hover:bg-zinc-900/50 transition-all duration-200 shadow-lg disabled:shadow-none"
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={20} strokeWidth={2.5} className="text-zinc-400 group-hover:text-zinc-200 transition-colors" />
       </button>
     </div>
   )
